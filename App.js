@@ -1,11 +1,13 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, TextInput, Button } from 'react-native';
+import { StyleSheet, Text, View, TextInput, Button, FlatList } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { getGroupsForUser } from './service/backend_calls'
+import { GroupBubble } from './components/GroupBubble'
+import { useEffect, useState } from 'react';
 
 const Stack = createNativeStackNavigator();
 
-function App() {
+const App = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator>
@@ -17,42 +19,52 @@ function App() {
 }
 
 
-function GroupsScreen({ navigation }) {
+const GroupsScreen = ({ route, navigation }) => {
+	const [groups, setGroups] = useState([])
+	const username = route.params.username
+
+	useEffect(() => {
+		setGroups(getGroupsForUser(username))
+	}, []);
+
 	return (
-		<View><Text>Hello iva</Text></View>
+		<View style={styles.container}>
+			<Text>Hello {username}, here are the groups you currently participate in: </Text>
+			<FlatList data={groups} renderItem={({item}) => <GroupBubble item={item} />}/>
+		</View>
 	)
 }
 
-type LoginBubbleProps = {
-	text: string
-}
 
-const LoginBubbleLine = (props: LoginBubbleProps) => {
-		return (
+const LoginScreen = ({ navigation }) => {
+	const [username, setUsername] = useState('')
+
+	return (
+		<View style={styles.container}>
+		<Text style={styles.title}>Messenger, but worse</Text>
+		
+		<View style={styles.login_container}>
+			<View style={styles.login_bubble}>
+			<Text>Login</Text>
 			<View style={styles.login_line}>
-				<Text style={styles.text_field}>{props.text}</Text>
-				<TextInput style={styles.input_field}></TextInput>
-			</View>
-		)
-}
-
-function LoginScreen({ navigation }) {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Messenger, but worse</Text>
-	  
-	  <View style={styles.login_container}>
-		<View style={styles.login_bubble}>
-		  <Text>Login</Text>
-		  <LoginBubbleLine text="Username" />
-		  <LoginBubbleLine text="Password" />
-	   </View>
-	  </View>
-	 
-	  <Button title="Sign in" onPress={() => navigation.navigate("Your groups")}>Sign in</Button>
-	  <Button title="Create account">Create account</Button>
-    </View>
-  );
+					<Text style={styles.text_field}>Username</Text>
+					<TextInput 
+						onChangeText={(userInput) => setUsername(userInput)} 
+						style={styles.input_field} />
+				</View>
+				<View style={styles.login_line}>
+					<Text style={styles.text_field}>Password</Text>
+					<TextInput style={styles.input_field} />
+				</View>
+		</View>
+		</View>
+		
+		<Button title="Sign in" onPress={() => navigation.navigate("Your groups", {
+			'username': username
+		})}>Sign in</Button>
+		<Button title="Create account">Create account</Button>
+		</View>
+	);
 }
 
 const styles = StyleSheet.create({
